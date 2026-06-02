@@ -489,7 +489,7 @@ class OneDriveFileStorage(FileStorageInterface):
 
     def _save(self, file, save_path):
         content = file.file.read()
-        name = save_path(file.filename)
+        name = file.filename
         path = self._get_path_str(save_path)
         self.root_path.get_by_path(path).upload(name, content).execute_query()
 

@@ -1,12 +1,14 @@
 import os
 import time
+import mimetypes
 
 from core.response import APIResponse
 from core.storage import FileStorageInterface, storages
 from core.settings import settings
 from apps.base.models import FileCodes, KeyValue
 from apps.base.utils import get_expire_info, get_file_path_name
-from fastapi import HTTPException
+from fastapi import HTTPException, UploadFile
+from starlette.datastructures import Headers
 from core.settings import data_root
 
 
@@ -25,7 +27,29 @@ class FileService:
             await FileCodes.filter(prefix__icontains=keyword).limit(size).offset(offset)
         )
         total = await FileCodes.filter(prefix__icontains=keyword).count()
-        return files, total
+        
+        # Serialize to standard dictionaries to prevent Pydantic v2 serialization errors
+        serialized = []
+        for f in files:
+            serialized.append({
+                "id": f.id,
+                "code": f.code,
+                "prefix": f.prefix,
+                "suffix": f.suffix,
+                "uuid_file_name": f.uuid_file_name,
+                "file_path": f.file_path,
+                "size": f.size,
+                "text": f.text,
+                "expired_at": f.expired_at.isoformat() if f.expired_at else None,
+                "expired_count": f.expired_count,
+                "used_count": f.used_count,
+                "created_at": f.created_at.isoformat() if f.created_at else None,
+                "file_hash": f.file_hash,
+                "is_chunked": f.is_chunked,
+                "upload_id": f.upload_id,
+                "collection_box_id": f.collection_box_id
+            })
+        return serialized, total
 
     async def download_file(self, file_id: int):
         file_code = await FileCodes.filter(id=file_id).first()
@@ -41,13 +65,23 @@ class FileService:
         if not await local_file.exists():
             raise HTTPException(status_code=404, detail="文件不存在")
 
-        text = await local_file.read()
+        file_obj = await local_file.read()
+        filename = local_file.file
+        content_type, _ = mimetypes.guess_type(filename)
+        content_type = content_type or "application/octet-stream"
+
+        upload_file = UploadFile(
+            file=file_obj,
+            filename=filename,
+            headers=Headers({"content-type": content_type})
+        )
+
         expired_at, expired_count, used_count, code = await get_expire_info(
             item.expire_value, item.expire_style
         )
-        path, suffix, prefix, uuid_file_name, save_path = await get_file_path_name(item)
+        path, suffix, prefix, uuid_file_name, save_path = await get_file_path_name(upload_file)
 
-        await self.file_storage.save_file(text, save_path)
+        await self.file_storage.save_file(upload_file, save_path)
 
         await FileCodes.create(
             code=code,
@@ -69,7 +103,7 @@ class FileService:
 
 class ConfigService:
     def get_config(self):
-        return settings.items()
+        return dict(settings.items())
 
     async def update_config(self, data: dict):
         admin_token = data.get("admin_token")
@@ -90,6 +124,7 @@ class ConfigService:
                 "uploadCount",
                 "uploadMinute",
                 "uploadSize",
+                "trust_proxies",
             ]:
                 data[key] = int(value)
             elif key in ["opacity"]:

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件在线预览 - FileCodeBox</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Highlight.js for Code Highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <!-- Marked.js for Markdown Rendering -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/11.1.1/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0b0f19;
+            --panel-bg: rgba(22, 30, 49, 0.6);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.25);
+            --success: #10b981;
+            --error: #ef4444;
+            --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.35);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(at 10% 20%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
+                radial-gradient(at 90% 80%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
+        }
+
+        /* Top Header Navigation */
+        header {
+            background: rgba(11, 15, 25, 0.7);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--panel-border);
+            padding: 16px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--panel-border);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateX(-2px);
+        }
+
+        .file-info {
+            display: flex;
+            flex-direction: column;
+            max-width: 400px;
+        }
+
+        .file-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 16px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-meta {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .btn-download {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-download:hover {
+            box-shadow: 0 0 20px var(--accent-glow);
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        /* Main Workspace */
+        main {
+            flex: 1;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-container {
+            width: 100%;
+            max-width: 1000px;
+            min-height: 500px;
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: var(--card-shadow);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Render Sections */
+        .preview-content {
+            width: 100%;
+            display: none;
+        }
+
+        .preview-content.active {
+            display: block;
+        }
+
+        /* 1. Image Preview */
+        .image-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-height: 70vh;
+            overflow: hidden;
+            border-radius: 16px;
+        }
+
+        .image-wrapper img {
+            max-width: 100%;
+            max-height: 70vh;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .image-wrapper img:hover {
+            transform: scale(1.02);
+        }
+
+        /* 2. Video Preview */
+        .video-wrapper video {
+            width: 100%;
+            max-height: 70vh;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            outline: none;
+        }
+
+        /* 3. Audio Preview */
+        .audio-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 500px;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .audio-icon-container {
+            width: 80px;
+            height: 80px;
+            background: rgba(99, 102, 241, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: var(--accent);
+        }
+
+        .audio-wave {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+            height: 30px;
+            margin-bottom: 24px;
+            align-items: center;
+        }
+
+        .wave-bar {
+            width: 4px;
+            height: 100%;
+            background-color: var(--accent);
+            border-radius: 2px;
+            animation: wave 1.2s ease-in-out infinite alternate;
+        }
+
+        .wave-bar:nth-child(2) { animation-delay: 0.2s; height: 60%; }
+        .wave-bar:nth-child(3) { animation-delay: 0.4s; height: 80%; }
+        .wave-bar:nth-child(4) { animation-delay: 0.1s; height: 40%; }
+        .wave-bar:nth-child(5) { animation-delay: 0.3s; height: 70%; }
+
+        @keyframes wave {
+            from { transform: scaleY(0.3); }
+            to { transform: scaleY(1); }
+        }
+
+        .audio-card audio {
+            width: 100%;
+            margin-top: 15px;
+            outline: none;
+        }
+
+        /* 4. PDF Preview */
+        .pdf-wrapper iframe {
+            width: 100%;
+            height: 70vh;
+            border: none;
+            border-radius: 16px;
+            background: white;
+        }
+
+        /* 5. Code & Text Preview */
+        .code-wrapper {
+            background: #0f141c;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            max-height: 70vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .code-wrapper pre {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        /* 6. Markdown Preview */
+        .markdown-wrapper {
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 30px;
+            max-height: 70vh;
+            overflow-y: auto;
+            line-height: 1.6;
+        }
+
+        .markdown-wrapper h1, .markdown-wrapper h2, .markdown-wrapper h3 {
+            margin-top: 24px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .markdown-wrapper p {
+            margin-bottom: 16px;
+            color: var(--text-secondary);
+        }
+
+        .markdown-wrapper code {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 85%;
+        }
+
+        .markdown-wrapper pre {
+            background: #0f141c;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+        }
+
+        /* 7. Fallback Page */
+        .fallback-card {
+            text-align: center;
+            max-width: 450px;
+            padding: 40px;
+        }
+
+        .fallback-icon {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .fallback-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .fallback-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        /* Scrollbar styles */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.01);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <a href="/" class="back-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                返回快递柜
+            </a>
+            <div class="file-info">
+                <span class="file-name" id="display-name">加载中...</span>
+                <span class="file-meta" id="display-meta">文件大小: -- &bull; 分享时间: --</span>
+            </div>
+        </div>
+        <a href="#" class="btn-download" id="download-anchor">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            直接下载
+        </a>
+    </header>
+
+    <main>
+        <div class="preview-container">
+            <!-- 1. Image Preview Section -->
+            <div class="preview-content" id="section-image">
+                <div class="image-wrapper">
+                    <img id="el-image" src="" alt="图片预览">
+                </div>
+            </div>
+
+            <!-- 2. Video Preview Section -->
+            <div class="preview-content" id="section-video">
+                <div class="video-wrapper">
+                    <video id="el-video" controls src=""></video>
+                </div>
+            </div>
+
+            <!-- 3. Audio Preview Section -->
+            <div class="preview-content" id="section-audio">
+                <div class="audio-card">
+                    <div class="audio-icon-container">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+                    </div>
+                    <div class="audio-wave">
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                        <div class="wave-bar"></div>
+                    </div>
+                    <p style="font-size: 15px; font-weight: 500; color: var(--text-primary);" id="audio-title">音频播放器</p>
+                    <audio id="el-audio" controls src=""></audio>
+                </div>
+            </div>
+
+            <!-- 4. PDF Preview Section -->
+            <div class="preview-content" id="section-pdf">
+                <div class="pdf-wrapper">
+                    <iframe id="el-pdf" src=""></iframe>
+                </div>
+            </div>
+
+            <!-- 5. Code / Text Preview Section -->
+            <div class="preview-content" id="section-code">
+                <div class="code-wrapper">
+                    <pre><code id="el-code" class="hljs"></code></pre>
+                </div>
+            </div>
+
+            <!-- 6. Markdown Preview Section -->
+            <div class="preview-content" id="section-markdown">
+                <div class="markdown-wrapper" id="el-markdown"></div>
+            </div>
+
+            <!-- 7. Fallback Preview Section -->
+            <div class="preview-content" id="section-fallback">
+                <div class="fallback-card">
+                    <div class="fallback-icon">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                    </div>
+                    <h4 class="fallback-title">暂无在线预览</h4>
+                    <p class="fallback-desc">此文件格式暂不支持在线预览。请直接点击上方或下方的“直接下载”按钮将文件保存到本地后查看。</p>
+                    <a href="#" class="btn-download" style="margin: 0 auto; display: inline-flex;" id="download-fallback-anchor">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        直接下载文件
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Inject global values (this will be substituted by the backend)
+        window.FILE_METADATA = {
+            code: "{{code}}",
+            key: "{{key}}",
+            filename: "{{filename}}",
+            size: "{{size}}",
+            created_at: "{{created_at}}",
+            preview_type: "{{preview_type}}",
+            download_url: "{{download_url}}"
+        };
+        // The text content for markdown, code or plain text
+        window.FILE_CONTENT = `{{file_content_escaped}}`;
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const meta = window.FILE_METADATA;
+            
+            // 1. Populate topbar info
+            document.getElementById("display-name").innerText = meta.filename;
+            document.getElementById("display-meta").innerHTML = `文件大小: ${meta.size} &bull; 分享时间: ${meta.created_at}`;
+            
+            // Set download URL
+            const dlAnchor = document.getElementById("download-anchor");
+            const dlFallbackAnchor = document.getElementById("download-fallback-anchor");
+            dlAnchor.href = meta.download_url;
+            dlFallbackAnchor.href = meta.download_url;
+
+            // 2. Render appropriate section
+            const type = meta.preview_type;
+            const targetSection = document.getElementById(`section-${type}`);
+            if (targetSection) {
+                targetSection.classList.add("active");
+            } else {
+                document.getElementById("section-fallback").classList.add("active");
+            }
+
+            // 3. Render specific elements
+            if (type === "image") {
+                document.getElementById("el-image").src = meta.download_url;
+            } else if (type === "video") {
+                document.getElementById("el-video").src = meta.download_url;
+            } else if (type === "audio") {
+                document.getElementById("el-audio").src = meta.download_url;
+                document.getElementById("audio-title").innerText = meta.filename;
+            } else if (type === "pdf") {
+                document.getElementById("el-pdf").src = meta.download_url;
+            } else if (type === "code") {
+                const codeEl = document.getElementById("el-code");
+                codeEl.textContent = window.FILE_CONTENT;
+                
+                // Detect extension for language mapping
+                const ext = meta.filename.split('.').pop().toLowerCase();
+                let langClass = "language-plaintext";
+                const langMap = {
+                    'js': 'language-javascript',
+                    'py': 'language-python',
+                    'html': 'language-xml',
+                    'css': 'language-css',
+                    'json': 'language-json',
+                    'sh': 'language-bash',
+                    'go': 'language-go',
+                    'java': 'language-java',
+                    'c': 'language-c',
+                    'cpp': 'language-cpp'
+                };
+                if (langMap[ext]) {
+                    langClass = langMap[ext];
+                }
+                codeEl.className = `${langClass} hljs`;
+                hljs.highlightElement(codeEl);
+            } else if (type === "markdown") {
+                const mdHtml = marked.parse(window.FILE_CONTENT);
+                document.getElementById("el-markdown").innerHTML = mdHtml;
+            }
+        });
+    </script>
+</body>
+</html>

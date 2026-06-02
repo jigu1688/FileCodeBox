@@ -1,6 +1,8 @@
 from typing import Dict, Union
 from datetime import datetime, timedelta
 from fastapi import HTTPException, Request
+from core.settings import settings
+
 
 
 class IPRateLimit:
@@ -35,11 +37,15 @@ class IPRateLimit:
         }
 
     def __call__(self, request: Request) -> str:
-        ip = (
-            request.headers.get("X-Real-IP")
-            or request.headers.get("X-Forwarded-For")
-            or request.client.host
-        )
+        if getattr(settings, "trust_proxies", 0):
+            x_forwarded_for = request.headers.get("X-Forwarded-For")
+            if x_forwarded_for:
+                ip = x_forwarded_for.split(",")[0].strip()
+            else:
+                ip = request.headers.get("X-Real-IP") or request.client.host
+        else:
+            ip = request.client.host
+
         if not self.check_ip(ip):
             raise HTTPException(status_code=423, detail="请求次数过多，请稍后再试")
         return ip

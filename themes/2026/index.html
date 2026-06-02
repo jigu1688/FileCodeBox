@@ -1,0 +1,1659 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="/assets/logo_small.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="description" content="{{description}}" />
+    <meta name="keywords" content="{{keywords}}" />
+    <meta name="generator" content="FileCodeBox 2026 Premium" />
+    <title>{{title}}</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QRCode CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-color: #080c14;
+            --card-bg: rgba(15, 23, 42, 0.45);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.35);
+            --accent-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --success: #10b981;
+            --error: #ef4444;
+            --panel-blur: 25px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            position: relative;
+            padding: 20px;
+        }
+
+        /* Ambient Background Particles */
+        .ambient-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.12;
+            animation: float 20s infinite alternate ease-in-out;
+        }
+
+        .particle-1 {
+            width: 450px;
+            height: 450px;
+            background: var(--accent);
+            top: -10%;
+            left: -10%;
+        }
+
+        .particle-2 {
+            width: 550px;
+            height: 550px;
+            background: #d946ef;
+            bottom: -15%;
+            right: -10%;
+            animation-delay: -5s;
+        }
+
+        .particle-3 {
+            width: 350px;
+            height: 350px;
+            background: #10b981;
+            top: 35%;
+            left: 45%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 40px) scale(1.15); }
+        }
+
+        /* Container & Glass Card */
+        .container {
+            width: 100%;
+            max-width: 480px;
+            z-index: 10;
+            position: relative;
+            animation: cardInit 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes cardInit {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(var(--panel-blur));
+            -webkit-backdrop-filter: blur(var(--panel-blur));
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            padding: 35px 30px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                        0 0 40px rgba(99, 102, 241, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Web Title */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f8fafc 30%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* Tabs Styling */
+        .tabs-capsule {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 4px;
+            border-radius: 16px;
+            display: flex;
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            z-index: 2;
+            transition: color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tab-btn i {
+            width: 16px;
+            height: 16px;
+        }
+
+        .tab-btn.active {
+            color: var(--text-primary);
+        }
+
+        .tab-highlight {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: calc(50% - 4px);
+            height: calc(100% - 8px);
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            z-index: 1;
+            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .tab-content {
+            display: none;
+            animation: tabFade 0.4s ease forwards;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes tabFade {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form elements */
+        .form-group {
+            margin-bottom: 22px;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Glowing input */
+        .input-glow-wrapper {
+            position: relative;
+            border-radius: 16px;
+            padding: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            transition: all 0.3s ease;
+        }
+
+        .input-glow-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 16px;
+            padding: 1px;
+            background: linear-gradient(135deg, #6366f1, #d946ef, #10b981);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .input-glow-wrapper.focused::before {
+            opacity: 1;
+        }
+
+        .input-glow-wrapper.focused {
+            box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+        }
+
+        .custom-input {
+            width: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            border: none;
+            outline: none;
+            padding: 15px 20px;
+            border-radius: 15px;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 15px;
+            transition: background 0.3s ease;
+        }
+
+        .custom-input::placeholder {
+            color: rgba(148, 163, 184, 0.4);
+        }
+
+        .custom-select {
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19.5 8.25l-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 18px center;
+            background-size: 16px;
+            padding-right: 45px;
+            cursor: pointer;
+        }
+
+        /* Large glowing code input for retrieval */
+        .code-input-box {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            letter-spacing: 12px;
+            padding-left: 12px;
+            text-transform: uppercase;
+        }
+
+        /* Modern upload box */
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.12);
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            background: rgba(255, 255, 255, 0.01);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .upload-area:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            background: rgba(99, 102, 241, 0.02);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #a855f7;
+            background: rgba(168, 85, 247, 0.06);
+            box-shadow: 0 0 30px rgba(168, 85, 247, 0.15);
+            transform: scale(1.02);
+        }
+
+        /* File suction visual effect */
+        .upload-area .upload-icon {
+            font-size: 40px;
+            color: var(--accent);
+            margin-bottom: 15px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .upload-area.dragover .upload-icon {
+            transform: translateY(8px) scale(0.85);
+            color: #d946ef;
+        }
+
+        .upload-area h3 {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .upload-area p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Expire group inside send */
+        .expire-row {
+            display: flex;
+            gap: 15px;
+        }
+
+        .expire-row .form-group {
+            flex: 1;
+        }
+
+        /* Toggle Text Mode Link */
+        .text-toggle-link {
+            text-align: right;
+            margin-top: -10px;
+            margin-bottom: 20px;
+        }
+
+        .text-toggle-link a {
+            font-size: 13px;
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .text-toggle-link a:hover {
+            color: #a855f7;
+            text-decoration: underline;
+        }
+
+        /* Text Share Area */
+        .text-share-area {
+            display: none;
+        }
+
+        .text-share-area.active {
+            display: block;
+        }
+
+        .text-area-custom {
+            height: 120px;
+            resize: none;
+        }
+
+        /* Primary Button */
+        .btn-primary {
+            width: 100%;
+            background: var(--accent-gradient);
+            border: none;
+            outline: none;
+            padding: 16px;
+            border-radius: 16px;
+            color: white;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(99, 102, 241, 0.45);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Progress Area */
+        .progress-container {
+            display: none;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 20px;
+            margin-top: 20px;
+            animation: tabFade 0.3s ease forwards;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 13px;
+        }
+
+        .progress-bar-bg {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--accent-gradient);
+            border-radius: 3px;
+            transition: width 0.1s ease;
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        /* Success screen after upload */
+        .success-screen {
+            display: none;
+            text-align: center;
+            animation: tabFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .success-icon-wrap {
+            width: 64px;
+            height: 64px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            color: var(--success);
+        }
+
+        .success-code-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 25px 20px;
+            margin-bottom: 25px;
+            position: relative;
+        }
+
+        .success-code-card .code-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .success-code-card .code-val {
+            font-size: 40px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #a5b4fc 0%, #d946ef 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+        }
+
+        /* QR code output box */
+        .qrcode-container {
+            margin: 20px auto 0;
+            padding: 10px;
+            background: white;
+            border-radius: 12px;
+            width: 140px;
+            height: 140px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        /* Glassmorphic Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(var(--panel-blur));
+            -webkit-backdrop-filter: blur(var(--panel-blur));
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            width: 100%;
+            max-width: 440px;
+            padding: 30px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.15);
+        }
+
+        .modal-overlay.active .modal-card {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-header h3 {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-close-btn {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close-btn:hover {
+            background: rgba(255,255,255,0.1);
+            color: var(--text-primary);
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 14px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .detail-item:last-of-type {
+            border-bottom: none;
+        }
+
+        .detail-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(99, 102, 241, 0.08);
+            border: 1px solid rgba(99, 102, 241, 0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .detail-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .detail-content p:first-child {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .detail-content p:last-child {
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .modal-action-row {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .modal-action-row .btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+            border: none;
+        }
+
+        .btn-preview {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            color: #34d399;
+        }
+
+        .btn-preview:hover {
+            background: rgba(16, 185, 129, 0.25);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.15);
+        }
+
+        .btn-download {
+            background: var(--accent-gradient);
+            color: white;
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.2);
+        }
+
+        .btn-download:hover {
+            box-shadow: 0 12px 20px rgba(99, 102, 241, 0.35);
+        }
+
+        /* Toast Notifier */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 320px;
+            width: 100%;
+            pointer-events: none;
+        }
+
+        .toast {
+            pointer-events: auto;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+            border-left: 4px solid var(--accent);
+            border-radius: 12px;
+            padding: 15px 20px;
+            color: var(--text-primary);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateX(120%);
+            transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .toast.active {
+            transform: translateX(0);
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.error {
+            border-left-color: var(--error);
+        }
+
+        .toast i {
+            flex-shrink: 0;
+            width: 20px;
+            height: 20px;
+        }
+
+        .toast.success i { color: var(--success); }
+        .toast.error i { color: var(--error); }
+        .toast.info i { color: var(--accent); }
+
+        .toast-msg {
+            font-size: 13.5px;
+            font-weight: 500;
+        }
+
+        /* Slide Drawer for Records */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 90;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .drawer-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: -100%;
+            width: 100%;
+            max-width: 400px;
+            height: 100vh;
+            background: rgba(10, 15, 30, 0.95);
+            backdrop-filter: blur(var(--panel-blur));
+            border-left: 1px solid var(--card-border);
+            z-index: 95;
+            box-shadow: -10px 0 40px rgba(0,0,0,0.5);
+            transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .drawer-overlay.active + .drawer {
+            right: 0;
+        }
+
+        .drawer-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .drawer-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .drawer-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .record-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .record-card:hover {
+            background: rgba(255,255,255,0.04);
+        }
+
+        .record-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            background: rgba(99,102,241,0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+        }
+
+        .record-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .record-info p:first-child {
+            font-size: 13.5px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-bottom: 2px;
+        }
+
+        .record-info p:last-child {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .record-action-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .record-action-btn:hover {
+            background: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+        }
+
+        .record-action-btn.delete-btn:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--error);
+        }
+
+        /* Disclaimer footer styling */
+        .disclaimer-btn-wrapper {
+            margin-top: 25px;
+            text-align: center;
+        }
+
+        .disclaimer-btn-wrapper a {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .disclaimer-btn-wrapper a:hover {
+            color: var(--text-primary);
+            text-decoration: underline;
+        }
+
+        /* Drawer toggler in footer */
+        .footer-utility-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 25px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .footer-utility-bar button, .footer-utility-bar a {
+            background: none;
+            border: none;
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: color 0.3s ease;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .footer-utility-bar button:hover, .footer-utility-bar a:hover {
+            color: var(--accent);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient particles -->
+    <div class="ambient-bg">
+        <div class="particle particle-1"></div>
+        <div class="particle particle-2"></div>
+        <div class="particle particle-3"></div>
+    </div>
+
+    <!-- Main Card -->
+    <div class="container">
+        <div class="card">
+            
+            <!-- Web Header -->
+            <div class="header">
+                <h1 id="site-title">{{title}}</h1>
+                <p id="site-desc">{{description}}</p>
+            </div>
+
+            <!-- Tabs switcher -->
+            <div class="tabs-capsule">
+                <div class="tab-highlight" id="tab-highlight"></div>
+                <button class="tab-btn active" onclick="switchTab('retrieve')">
+                    <i data-lucide="key-round"></i>取件柜
+                </button>
+                <button class="tab-btn" onclick="switchTab('send')">
+                    <i data-lucide="send"></i>寄件柜
+                </button>
+            </div>
+
+            <!-- Tab Content: Retrieve -->
+            <div class="tab-content active" id="tab-retrieve">
+                <form id="retrieve-form" onsubmit="handleRetrieve(event)">
+                    <div class="form-group">
+                        <label for="code-input">输入 5 位取件码</label>
+                        <div class="input-glow-wrapper" id="retrieve-wrapper">
+                            <input type="text" id="code-input" class="custom-input code-input-box" placeholder="•••••" maxlength="5" autocomplete="off" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-primary" id="retrieve-submit-btn">
+                        <span>提取文件</span><i data-lucide="arrow-right"></i>
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tab Content: Send -->
+            <div class="tab-content" id="tab-send">
+                
+                <!-- Toggle Mode link (File / Text) -->
+                <div class="text-toggle-link">
+                    <a href="javascript:void(0)" onclick="toggleSendMode()" id="send-mode-toggle">切换至文字分享</a>
+                </div>
+
+                <!-- Form for File Upload -->
+                <form id="send-form" onsubmit="handleSend(event)">
+                    <!-- File Drag Area -->
+                    <div class="form-group" id="file-upload-group">
+                        <div class="upload-area" id="upload-area" onclick="triggerFileSelect()">
+                            <input type="file" id="file-selector" class="hidden" onchange="handleFileChosen(event)">
+                            <div class="upload-icon"><i data-lucide="upload-cloud"></i></div>
+                            <h3 id="upload-box-title">拖拽文件至此 或 点击上传</h3>
+                            <p id="upload-box-size-limit">最大支持上传 10MB 文件</p>
+                        </div>
+                    </div>
+
+                    <!-- Text Area (shared) -->
+                    <div class="form-group text-share-area" id="text-share-group">
+                        <label for="text-content">输入分享的文本内容</label>
+                        <div class="input-glow-wrapper" id="text-wrapper">
+                            <textarea id="text-content" class="custom-input text-area-custom" placeholder="在此输入或粘贴需要分享的文本..."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- Expire configurations -->
+                    <div class="expire-row">
+                        <!-- Expire style -->
+                        <div class="form-group">
+                            <label for="expire-style">销毁条件</label>
+                            <div class="input-glow-wrapper">
+                                <select id="expire-style" class="custom-input custom-select" onchange="handleExpireStyleChange()">
+                                    <option value="day" selected>1 天后自动销毁</option>
+                                    <option value="hour">1 小时后自动销毁</option>
+                                    <option value="minute">1 分钟后自动销毁</option>
+                                    <option value="count">按下载次数销毁</option>
+                                    <option value="forever">永不销毁</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Expire Value -->
+                        <div class="form-group" id="expire-val-group">
+                            <label for="expire-val" id="expire-val-label">有效天数</label>
+                            <div class="input-glow-wrapper">
+                                <input type="number" id="expire-val" class="custom-input" min="1" value="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary" id="send-submit-btn">
+                        <span>生成取件码</span><i data-lucide="sparkles"></i>
+                    </button>
+                </form>
+
+                <!-- Sending Progress -->
+                <div class="progress-container" id="progress-container">
+                    <div class="progress-header">
+                        <span id="progress-status-text">文件上传中...</span>
+                        <span id="progress-percent">0%</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="progress-bar-fill"></div>
+                    </div>
+                </div>
+
+                <!-- Success Screen -->
+                <div class="success-screen" id="success-screen">
+                    <div class="success-icon-wrap"><i data-lucide="check"></i></div>
+                    <div class="success-code-card">
+                        <p class="code-label">您的提取口令</p>
+                        <p class="code-val" id="success-code-val">-----</p>
+                        <button class="btn-primary" style="padding:10px; font-size:13px; border-radius:10px; max-width:160px; margin:0 auto;" onclick="copySuccessCode()">
+                            <i data-lucide="copy" style="width:14px; height:14px;"></i>复制口令链接
+                        </button>
+                        <div class="qrcode-container" id="qrcode-box"></div>
+                    </div>
+                    <button class="btn-primary" onclick="resetSendScreen()">
+                        <span>继续分享下一个</span><i data-lucide="rotate-ccw"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Footer Utilities -->
+            <div class="footer-utility-bar">
+                <button onclick="toggleDrawer()"><i data-lucide="clock"></i>取件历史</button>
+                <a href="/collect/admin" target="_blank"><i data-lucide="inbox"></i>收集柜管理</a>
+                <a href="/sys-admin#/admin" target="_blank"><i data-lucide="settings"></i>后台管理</a>
+                <a href="javascript:void(0)" onclick="showDisclaimer()"><i data-lucide="shield-alert"></i>免责声明</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Details Modal -->
+    <div class="modal-overlay" id="detail-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>文件提取详情</h3>
+                <button class="modal-close-btn" onclick="closeModal()"><i data-lucide="x"></i></button>
+            </div>
+            
+            <div class="detail-item">
+                <div class="detail-icon"><i data-lucide="file-text"></i></div>
+                <div class="detail-content">
+                    <p>文件名</p>
+                    <p id="modal-filename">---</p>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon"><i data-lucide="database"></i></div>
+                <div class="detail-content">
+                    <p>文件大小</p>
+                    <p id="modal-filesize">0 Bytes</p>
+                </div>
+            </div>
+
+            <div class="detail-item">
+                <div class="detail-icon"><i data-lucide="calendar"></i></div>
+                <div class="detail-content">
+                    <p>取件日期</p>
+                    <p id="modal-date">---</p>
+                </div>
+            </div>
+
+            <div class="modal-action-row">
+                <a href="javascript:void(0)" target="_blank" class="btn btn-preview" id="modal-preview-btn">
+                    <i data-lucide="eye"></i>在线预览
+                </a>
+                <a href="javascript:void(0)" class="btn btn-download" id="modal-download-btn">
+                    <i data-lucide="download"></i>安全下载
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Drawer -->
+    <div class="drawer-overlay" id="drawer-overlay" onclick="toggleDrawer()"></div>
+    <div class="drawer" id="history-drawer">
+        <div class="drawer-header">
+            <h3>本地取件历史</h3>
+            <button class="modal-close-btn" onclick="toggleDrawer()"><i data-lucide="x"></i></button>
+        </div>
+        <div class="drawer-content" id="drawer-list-content">
+            <!-- Dynamic Record Cards -->
+        </div>
+    </div>
+
+    <!-- Toast Notifier -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+        // State variables
+        let currentTab = 'retrieve';
+        let sendMode = 'file'; // 'file' or 'text'
+        let selectedFile = null;
+        let systemConfig = null;
+
+        // Initialize theme and dynamic inputs glowing
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initInputFocusListeners();
+            loadSystemConfig();
+            renderHistoryRecords();
+            
+            // Drag and Drop integration
+            const uploadArea = document.getElementById('upload-area');
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    uploadArea.classList.remove('dragover');
+                }, false);
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                if (files.length > 0) {
+                    selectedFile = files[0];
+                    updateUploadAreaWithFile(selectedFile);
+                }
+            }, false);
+        });
+
+        // Tab switcher logic
+        function switchTab(tab) {
+            if (tab === currentTab) return;
+            currentTab = tab;
+            
+            const highlight = document.getElementById('tab-highlight');
+            const btns = document.querySelectorAll('.tab-btn');
+            
+            if (tab === 'retrieve') {
+                highlight.style.transform = 'translateX(0)';
+                btns[0].classList.add('active');
+                btns[1].classList.remove('active');
+                document.getElementById('tab-retrieve').classList.add('active');
+                document.getElementById('tab-send').classList.remove('active');
+            } else {
+                highlight.style.transform = 'translateX(100%)';
+                btns[0].classList.remove('active');
+                btns[1].classList.add('active');
+                document.getElementById('tab-retrieve').classList.remove('active');
+                document.getElementById('tab-send').classList.add('active');
+            }
+        }
+
+        // Toggle send forms (File / Text)
+        function toggleSendMode() {
+            const toggleBtn = document.getElementById('send-mode-toggle');
+            const fileGroup = document.getElementById('file-upload-group');
+            const textGroup = document.getElementById('text-share-group');
+            
+            if (sendMode === 'file') {
+                sendMode = 'text';
+                toggleBtn.innerText = '切换至文件分享';
+                fileGroup.classList.add('hidden');
+                textGroup.classList.add('active');
+            } else {
+                sendMode = 'file';
+                toggleBtn.innerText = '切换至文字分享';
+                fileGroup.classList.remove('hidden');
+                textGroup.classList.remove('active');
+            }
+        }
+
+        // Glowing inputs focus helper
+        function initInputFocusListeners() {
+            const inputs = document.querySelectorAll('.custom-input');
+            inputs.forEach(input => {
+                const wrapper = input.closest('.input-glow-wrapper');
+                if (wrapper) {
+                    input.addEventListener('focus', () => wrapper.classList.add('focused'));
+                    input.addEventListener('blur', () => wrapper.classList.remove('focused'));
+                }
+            });
+        }
+
+        // Fetch settings from `/` POST API
+        async function loadSystemConfig() {
+            try {
+                const response = await fetch('/', { method: 'POST' });
+                const res = await response.json();
+                if (res.code === 200 && res.detail) {
+                    systemConfig = res.detail;
+                    document.getElementById('site-title').innerText = systemConfig.name || '文件快递柜 - FileCodeBox';
+                    document.getElementById('site-desc').innerText = systemConfig.description || '开箱即用的文件快传系统';
+                    
+                    // Update upload size limit label
+                    if (systemConfig.uploadSize) {
+                        const sizeMB = (systemConfig.uploadSize / (1024 * 1024)).toFixed(0);
+                        document.getElementById('upload-box-size-limit').innerText = `最大支持上传 ${sizeMB}MB 文件`;
+                    }
+                }
+            } catch (err) {
+                console.error("加载系统配置失败:", err);
+            }
+        }
+
+        // Toast alert notifier
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let iconName = 'info';
+            if (type === 'success') iconName = 'check-circle';
+            if (type === 'error') iconName = 'alert-triangle';
+
+            toast.innerHTML = `
+                <i data-lucide="${iconName}"></i>
+                <span class="toast-msg">${message}</span>
+            `;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            // Trigger animation
+            setTimeout(() => toast.classList.add('active'), 50);
+
+            // Auto dismiss
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+
+        // Dragover/Selector file chosen helper
+        function triggerFileSelect() {
+            document.getElementById('file-selector').click();
+        }
+
+        function handleFileChosen(e) {
+            const files = e.target.files;
+            if (files.length > 0) {
+                selectedFile = files[0];
+                updateUploadAreaWithFile(selectedFile);
+            }
+        }
+
+        function updateUploadAreaWithFile(file) {
+            const sizeStr = formatBytes(file.size);
+            document.getElementById('upload-box-title').innerText = file.name;
+            document.getElementById('upload-box-size-limit').innerText = `已选择文件 · 大小: ${sizeStr}`;
+            document.getElementById('upload-area').style.borderColor = 'var(--success)';
+            showToast(`已选择文件: ${file.name}`, 'success');
+        }
+
+        // File expire changes label updates
+        function handleExpireStyleChange() {
+            const style = document.getElementById('expire-style').value;
+            const valGroup = document.getElementById('expire-val-group');
+            const label = document.getElementById('expire-val-label');
+            const input = document.getElementById('expire-val');
+
+            if (style === 'forever') {
+                valGroup.classList.add('hidden');
+            } else {
+                valGroup.classList.remove('hidden');
+                if (style === 'day') {
+                    label.innerText = '有效天数';
+                    input.value = 1;
+                    input.min = 1;
+                } else if (style === 'hour') {
+                    label.innerText = '有效小时';
+                    input.value = 1;
+                    input.min = 1;
+                } else if (style === 'minute') {
+                    label.innerText = '有效分钟';
+                    input.value = 5;
+                    input.min = 1;
+                } else if (style === 'count') {
+                    label.innerText = '可下载次数';
+                    input.value = 5;
+                    input.min = 1;
+                }
+            }
+        }
+
+        // Send logic
+        async function handleSend(e) {
+            e.preventDefault();
+            
+            const expireStyle = document.getElementById('expire-style').value;
+            const expireValue = expireStyle === 'forever' ? 1 : parseInt(document.getElementById('expire-val').value) || 1;
+
+            if (sendMode === 'file') {
+                if (!selectedFile) {
+                    showToast("请先选择或拖入一个文件！", "error");
+                    return;
+                }
+
+                // Check file size if config is loaded
+                if (systemConfig && systemConfig.uploadSize && selectedFile.size > systemConfig.uploadSize) {
+                    showToast(`文件超过大小限制，最大允许 ${formatBytes(systemConfig.uploadSize)}`, "error");
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('expire_style', expireStyle);
+                formData.append('expire_value', expireValue.toString());
+
+                // Reset and show progress bar
+                document.getElementById('send-form').classList.add('hidden');
+                document.getElementById('progress-container').style.display = 'block';
+                const progressFill = document.getElementById('progress-bar-fill');
+                const progressText = document.getElementById('progress-percent');
+                progressFill.style.width = '0%';
+                progressText.innerText = '0%';
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', '/share/file/', true);
+                
+                xhr.upload.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        const percent = Math.round((event.loaded / event.total) * 100);
+                        progressFill.style.width = `${percent}%`;
+                        progressText.innerText = `${percent}%`;
+                    }
+                };
+
+                xhr.onload = () => {
+                    document.getElementById('progress-container').style.display = 'none';
+                    if (xhr.status === 200) {
+                        try {
+                            const res = JSON.parse(xhr.responseText);
+                            if (res.code === 200 && res.detail) {
+                                showSuccessScreen(res.detail.code, res.detail.name);
+                            } else {
+                                showToast(`发送失败: ${res.detail || '未知原因'}`, 'error');
+                                document.getElementById('send-form').classList.remove('hidden');
+                            }
+                        } catch (err) {
+                            showToast("解析服务器响应失败！", 'error');
+                            document.getElementById('send-form').classList.remove('hidden');
+                        }
+                    } else {
+                        showToast(`服务器响应错误: ${xhr.status}`, 'error');
+                        document.getElementById('send-form').classList.remove('hidden');
+                    }
+                };
+
+                xhr.onerror = () => {
+                    document.getElementById('progress-container').style.display = 'none';
+                    document.getElementById('send-form').classList.remove('hidden');
+                    showToast("网络请求失败，请检查您的网络连接！", 'error');
+                };
+
+                xhr.send(formData);
+
+            } else {
+                // Text Mode
+                const content = document.getElementById('text-content').value.trim();
+                if (!content) {
+                    showToast("请输入需要分享的文本内容！", "error");
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('text', content);
+                formData.append('expire_style', expireStyle);
+                formData.append('expire_value', expireValue.toString());
+
+                document.getElementById('send-submit-btn').disabled = true;
+                showToast("文字取件码生成中...", "info");
+
+                try {
+                    const response = await fetch('/share/text/', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const res = await response.json();
+                    if (res.code === 200 && res.detail) {
+                        showSuccessScreen(res.detail.code, "文字分享");
+                    } else {
+                        showToast(`生成失败: ${res.detail || '未知原因'}`, 'error');
+                    }
+                } catch (err) {
+                    showToast("文字分享发送失败，请检查网络！", 'error');
+                } finally {
+                    document.getElementById('send-submit-btn').disabled = false;
+                }
+            }
+        }
+
+        // Show Success Screen after file upload / text share
+        function showSuccessScreen(code, name) {
+            document.getElementById('send-form').classList.add('hidden');
+            document.getElementById('success-screen').style.display = 'block';
+            document.getElementById('success-code-val').innerText = code;
+
+            // Generate QR code
+            const qrBox = document.getElementById('qrcode-box');
+            qrBox.innerHTML = '';
+            const shareUrl = `${window.location.origin}?code=${code}`;
+            
+            // Render QRCode
+            new QRCode(qrBox, {
+                text: shareUrl,
+                width: 120,
+                height: 120,
+                colorDark : "#080c14",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.M
+            });
+
+            showToast("提取码生成成功！", "success");
+
+            // Save to localStorage history
+            const history = JSON.parse(localStorage.getItem('fcb_history') || '[]');
+            history.unshift({
+                id: Date.now(),
+                code: code,
+                filename: name,
+                size: selectedFile ? formatBytes(selectedFile.size) : `${contentLength(document.getElementById('text-content').value)} 字`,
+                date: new Date().toLocaleString()
+            });
+            localStorage.setItem('fcb_history', JSON.stringify(history));
+            renderHistoryRecords();
+        }
+
+        function contentLength(str) {
+            return str ? str.length : 0;
+        }
+
+        function copySuccessCode() {
+            const code = document.getElementById('success-code-val').innerText;
+            const shareUrl = `${window.location.origin}?code=${code}`;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showToast("分享口令链接复制成功！", "success");
+            }).catch(() => {
+                showToast("复制失败，请手动选择复制！", "error");
+            });
+        }
+
+        function resetSendScreen() {
+            document.getElementById('success-screen').style.display = 'none';
+            document.getElementById('send-form').classList.remove('hidden');
+            selectedFile = null;
+            document.getElementById('text-content').value = '';
+            document.getElementById('upload-area').style.borderColor = 'rgba(255, 255, 255, 0.12)';
+            document.getElementById('upload-box-title').innerText = '拖拽文件至此 或 点击上传';
+            if (systemConfig && systemConfig.uploadSize) {
+                const sizeMB = (systemConfig.uploadSize / (1024 * 1024)).toFixed(0);
+                document.getElementById('upload-box-size-limit').innerText = `最大支持上传 ${sizeMB}MB 文件`;
+            } else {
+                document.getElementById('upload-box-size-limit').innerText = '最大支持上传 10MB 文件';
+            }
+        }
+
+        // Retrieve logic
+        async function handleRetrieve(e) {
+            e.preventDefault();
+            const input = document.getElementById('code-input');
+            const code = input.value.trim().toUpperCase();
+
+            if (code.length !== 5) {
+                showToast("取件码必须为 5 位数字或字母！", "error");
+                return;
+            }
+
+            const submitBtn = document.getElementById('retrieve-submit-btn');
+            submitBtn.disabled = true;
+            showToast("正在提取文件详情...", "info");
+
+            try {
+                const response = await fetch('/share/select/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code: code })
+                });
+                const res = await response.json();
+                
+                if (res.code === 200 && res.detail) {
+                    const detail = res.detail;
+                    const isDownloadable = detail.text.startsWith('/share/download') || detail.name !== 'Text';
+                    const downloadUrl = isDownloadable ? (detail.text.startsWith('http') ? detail.text : `${window.location.origin}${detail.text}`) : null;
+                    const fileTextContent = isDownloadable ? null : detail.text;
+                    const previewKey = isDownloadable ? (detail.text.includes('key=') ? detail.text.split('key=')[1].split('&')[0] : '') : '';
+
+                    // Display details modal
+                    document.getElementById('modal-filename').innerText = detail.name;
+                    document.getElementById('modal-filesize').innerText = formatBytes(detail.size);
+                    document.getElementById('modal-date').innerText = new Date().toLocaleDateString();
+
+                    // Adjust Action Buttons
+                    const previewBtn = document.getElementById('modal-preview-btn');
+                    const downloadBtn = document.getElementById('modal-download-btn');
+
+                    if (isDownloadable) {
+                        previewBtn.classList.remove('hidden');
+                        previewBtn.href = `/preview/${detail.code}?key=${previewKey}`;
+                        downloadBtn.innerText = '安全下载';
+                        downloadBtn.href = downloadUrl;
+                        downloadBtn.onclick = null;
+                    } else {
+                        // Text file: click to download as file or show alert with content
+                        previewBtn.classList.add('hidden');
+                        downloadBtn.innerText = '一键复制文本';
+                        downloadBtn.href = 'javascript:void(0)';
+                        downloadBtn.onclick = () => {
+                            navigator.clipboard.writeText(fileTextContent).then(() => {
+                                showToast("文本内容复制成功！", "success");
+                            });
+                        };
+                    }
+
+                    // Save retrieved file to history
+                    const history = JSON.parse(localStorage.getItem('fcb_history') || '[]');
+                    if (!history.some(h => h.code === detail.code)) {
+                        history.unshift({
+                            id: Date.now(),
+                            code: detail.code,
+                            filename: detail.name,
+                            size: formatBytes(detail.size),
+                            date: new Date().toLocaleString(),
+                            downloadUrl: downloadUrl,
+                            previewUrl: isDownloadable ? `/preview/${detail.code}?key=${previewKey}` : null,
+                            content: fileTextContent
+                        });
+                        localStorage.setItem('fcb_history', JSON.stringify(history));
+                        renderHistoryRecords();
+                    }
+
+                    openModal();
+                    showToast("文件提取成功！", "success");
+                } else {
+                    showToast(`提取失败: ${res.detail || '口令不存在或已过期'}`, "error");
+                }
+            } catch (err) {
+                showToast("提取文件网络连接失败，请检查后端状态！", "error");
+            } finally {
+                submitBtn.disabled = false;
+                input.value = '';
+            }
+        }
+
+        // Modal triggers
+        function openModal() {
+            document.getElementById('detail-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('detail-modal').classList.remove('active');
+        }
+
+        // Disclaimer modal
+        function showDisclaimer() {
+            let disclaimer = "请勿上传或分享任何违规或违法内容。本系统仅作为个人临时文件传输及口令提取柜，坚决配合相关监管部门确保网络和谐安全，严重违规者将自行承担一切刑事司法法律责任。";
+            if (systemConfig && systemConfig.explain) {
+                disclaimer = systemConfig.explain;
+            }
+            alert(disclaimer);
+        }
+
+        // Local history drawer
+        function toggleDrawer() {
+            const overlay = document.getElementById('drawer-overlay');
+            overlay.classList.toggle('active');
+        }
+
+        function renderHistoryRecords() {
+            const listContent = document.getElementById('drawer-list-content');
+            const history = JSON.parse(localStorage.getItem('fcb_history') || '[]');
+            
+            if (history.length === 0) {
+                listContent.innerHTML = `
+                    <div style="text-align:center; padding: 40px 10px; color:var(--text-secondary);">
+                        <i data-lucide="folder-open" style="width:40px; height:40px; stroke-width:1.5; margin:0 auto 10px; display:block;"></i>
+                        <p style="font-size:13.5px;">暂无本地取件或发送记录</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            listContent.innerHTML = '';
+            history.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'record-card';
+                card.innerHTML = `
+                    <div class="record-icon"><i data-lucide="file"></i></div>
+                    <div class="record-info">
+                        <p title="${item.filename}">${item.filename}</p>
+                        <p>提取码: <b>${item.code}</b> · ${item.size}</p>
+                    </div>
+                    <button class="record-action-btn" onclick="quickAccessRecord('${item.code}')"><i data-lucide="external-link"></i></button>
+                    <button class="record-action-btn delete-btn" onclick="deleteRecord(${item.id})"><i data-lucide="trash-2"></i></button>
+                `;
+                listContent.appendChild(card);
+            });
+            lucide.createIcons();
+        }
+
+        function quickAccessRecord(code) {
+            toggleDrawer();
+            document.getElementById('code-input').value = code;
+            switchTab('retrieve');
+            // Auto submit
+            document.getElementById('retrieve-form').dispatchEvent(new Event('submit'));
+        }
+
+        function deleteRecord(id) {
+            let history = JSON.parse(localStorage.getItem('fcb_history') || '[]');
+            history = history.filter(item => item.id !== id);
+            localStorage.setItem('fcb_history', JSON.stringify(history));
+            renderHistoryRecords();
+            showToast("记录已删除！", "success");
+        }
+
+        // Format tools
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+    </script>
+</body>
+</html>

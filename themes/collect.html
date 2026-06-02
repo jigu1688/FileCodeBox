@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文件收集柜 - 提交文件</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+            --panel-bg: rgba(30, 41, 59, 0.45);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --success: #10b981;
+            --error: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Container */
+        .container {
+            width: 100%;
+            max-width: 580px;
+            background: var(--panel-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Box Title Area */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(to right, #a5b4fc, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .info-tags {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        /* Drag and Drop Zone */
+        .dropzone {
+            border: 2px dashed rgba(99, 102, 241, 0.3);
+            background: rgba(99, 102, 241, 0.02);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 25px;
+        }
+
+        .dropzone.dragover {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, 0.08);
+            box-shadow: 0 0 20px var(--accent-glow);
+            transform: scale(1.02);
+        }
+
+        .dropzone svg {
+            width: 48px;
+            height: 48px;
+            fill: none;
+            stroke: var(--accent);
+            stroke-width: 1.5;
+            margin-bottom: 15px;
+            transition: transform 0.3s ease;
+        }
+
+        .dropzone.dragover svg {
+            transform: translateY(-5px) scale(1.1);
+        }
+
+        .dropzone p {
+            font-size: 15px;
+            color: var(--text-primary);
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .dropzone span {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* File List Area */
+        .file-list {
+            margin-top: 20px;
+            max-height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 4px;
+        }
+
+        .file-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .file-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+
+        .file-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .file-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 70%;
+        }
+
+        .file-size {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .file-status {
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 6px;
+        }
+        
+        .status-waiting { color: #eab308; background: rgba(234, 179, 8, 0.1); }
+        .status-uploading { color: #3b82f6; background: rgba(59, 130, 246, 0.1); }
+        .status-success { color: var(--success); background: rgba(16, 185, 129, 0.1); }
+        .status-error { color: var(--error); background: rgba(239, 68, 68, 0.1); }
+
+        /* Progress Bar */
+        .progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: var(--accent);
+            border-radius: 2px;
+            transition: width 0.1s ease;
+        }
+
+        /* Error/Expired Overlay */
+        .error-state {
+            text-align: center;
+            padding: 40px 20px;
+            display: none;
+        }
+
+        .error-state svg {
+            width: 60px;
+            height: 60px;
+            stroke: var(--error);
+            fill: none;
+            stroke-width: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .error-state h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        .error-state p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        /* Complete Screen */
+        .complete-screen {
+            display: none;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .complete-screen svg {
+            width: 64px;
+            height: 64px;
+            stroke: var(--success);
+            fill: none;
+            stroke-width: 1.5;
+            margin-bottom: 20px;
+            animation: scaleUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes scaleUp {
+            from { transform: scale(0.6); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .complete-screen h2 {
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+
+        .complete-screen p {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 25px;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            box-shadow: 0 0 15px var(--accent-glow);
+            opacity: 0.95;
+            transform: translateY(-1px);
+        }
+
+        .btn-subtle {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-primary);
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-subtle:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .upload-section {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="main-container">
+    <!-- 正常上传状态 -->
+    <div class="upload-section" id="upload-section">
+        <div class="header">
+            <h1 id="box-name">正在加载收集柜...</h1>
+            <p id="box-desc">请稍候</p>
+            <div class="info-tags" id="box-tags"></div>
+        </div>
+
+        <div class="dropzone" id="dropzone">
+            <input type="file" id="file-input" class="file-input" multiple>
+            <svg viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16.5V9.75m0 0l3 3m-3-3l-3 3M6.75 19.5a4.5 4.5 0 01-1.41-8.775 5.25 5.25 0 0110.233-2.33 3 3 0 013.758 3.848A3.752 3.752 0 0118 19.5H6.75z" />
+            </svg>
+            <p>拖拽文件到这里，或者<span>点击选择文件</span></p>
+        </div>
+
+        <div class="file-list" id="file-list"></div>
+    </div>
+
+    <!-- 错误/失效状态 -->
+    <div class="error-state" id="error-section">
+        <svg viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+        </svg>
+        <h2 id="error-title">收集柜无效</h2>
+        <p id="error-desc">该链接不存在或已被管理员删除。</p>
+    </div>
+
+    <!-- 成功完成状态 -->
+    <div class="complete-screen" id="complete-section">
+        <svg viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <h2>文件上传成功！</h2>
+        <p>您的文件已被安全收集保存。</p>
+        <button class="btn" onclick="resetPage()">继续上传</button>
+    </div>
+</div>
+
+<script>
+    const boxCode = window.location.pathname.split("/").pop();
+    let boxSettings = null;
+    let uploadQueue = [];
+    let isUploading = false;
+
+    // Elements
+    const uploadSection = document.getElementById("upload-section");
+    const errorSection = document.getElementById("error-section");
+    const completeSection = document.getElementById("complete-section");
+    const dropzone = document.getElementById("dropzone");
+    const fileInput = document.getElementById("file-input");
+    const fileList = document.getElementById("file-list");
+
+    // Load Box Info
+    async function loadBoxInfo() {
+        try {
+            const res = await fetch(`/api/collect/${boxCode}`);
+            const data = await res.json();
+            
+            if (data.code !== 200 || !data.detail) {
+                showError("收集柜不可用", data.detail || "链接已过期或未开启。");
+                return;
+            }
+
+            boxSettings = data.detail;
+            renderBoxHeader();
+        } catch (e) {
+            showError("网络错误", "无法连接到服务器，请刷新重试。");
+        }
+    }
+
+    function renderBoxHeader() {
+        document.getElementById("box-name").innerText = boxSettings.name;
+        document.getElementById("box-desc").innerText = boxSettings.description || "管理员暂未提供描述说明。";
+        
+        const tagsContainer = document.getElementById("box-tags");
+        tagsContainer.innerHTML = "";
+
+        // Render rules tags
+        if (boxSettings.max_file_size > 0) {
+            const sizeLimitMB = (boxSettings.max_file_size / (1024 * 1024)).toFixed(1);
+            tagsContainer.innerHTML += `<div class="tag">单文件限制 ${sizeLimitMB} MB</div>`;
+        }
+        if (boxSettings.allowed_extensions) {
+            tagsContainer.innerHTML += `<div class="tag">支持格式: ${boxSettings.allowed_extensions.toUpperCase()}</div>`;
+        }
+        if (boxSettings.max_files > 0) {
+            tagsContainer.innerHTML += `<div class="tag">收集上限: ${boxSettings.max_files} 个文件</div>`;
+        }
+    }
+
+    function showError(title, desc) {
+        uploadSection.style.display = "none";
+        completeSection.style.display = "none";
+        errorSection.style.display = "block";
+        document.getElementById("error-title").innerText = title;
+        document.getElementById("error-desc").innerText = desc;
+    }
+
+    // Drag & Drop Handlers
+    dropzone.addEventListener("click", () => fileInput.click());
+    
+    dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+    });
+
+    ["dragleave", "dragend"].forEach(type => {
+        dropzone.addEventListener(type, () => {
+            dropzone.classList.remove("dragover");
+        });
+    });
+
+    dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        handleSelectedFiles(e.dataTransfer.files);
+    });
+
+    fileInput.addEventListener("change", (e) => {
+        handleSelectedFiles(e.target.files);
+    });
+
+    function handleSelectedFiles(files) {
+        if (!files || files.length === 0) return;
+        
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            
+            // Client-side validations
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (boxSettings.allowed_extensions) {
+                const allowed = boxSettings.allowed_extensions.split(',').map(e => e.trim().toLowerCase());
+                if (!allowed.includes(ext)) {
+                    alert(`文件 "${file.name}" 格式不支持！只允许: ${boxSettings.allowed_extensions}`);
+                    continue;
+                }
+            }
+
+            if (boxSettings.max_file_size > 0 && file.size > boxSettings.max_file_size) {
+                const maxMB = (boxSettings.max_file_size / (1024 * 1024)).toFixed(1);
+                alert(`文件 "${file.name}" 大小超过了单文件限制 (${maxMB} MB)！`);
+                continue;
+            }
+
+            // Add to queue
+            const fileId = "file_" + Date.now() + "_" + Math.random().toString(36).substr(2, 5);
+            const sizeFormatted = formatBytes(file.size);
+            
+            uploadQueue.push({
+                id: fileId,
+                file: file,
+                status: 'waiting',
+                progress: 0
+            });
+
+            // Append item UI
+            const fileItem = document.createElement("div");
+            fileItem.className = "file-item";
+            fileItem.id = fileId;
+            fileItem.innerHTML = `
+                <div class="file-info">
+                    <span class="file-name" title="${file.name}">${file.name}</span>
+                    <span class="file-size">${sizeFormatted}</span>
+                    <span class="file-status status-waiting">排队中</span>
+                </div>
+                <div class="progress-bar-container" id="progress-container-${fileId}">
+                    <div class="progress-bar" id="progress-bar-${fileId}"></div>
+                </div>
+            `;
+            fileList.appendChild(fileItem);
+        }
+        
+        processQueue();
+    }
+
+    async function processQueue() {
+        if (isUploading) return;
+        
+        const next = uploadQueue.find(item => item.status === 'waiting');
+        if (!next) {
+            // Check if all finished successfully
+            const hasActiveUploads = uploadQueue.some(item => ['waiting', 'uploading'].includes(item.status));
+            if (!hasActiveUploads && uploadQueue.length > 0) {
+                const allSuccess = uploadQueue.every(item => item.status === 'success');
+                if (allSuccess) {
+                    setTimeout(() => {
+                        uploadSection.style.display = "none";
+                        completeSection.style.display = "block";
+                    }, 800);
+                }
+            }
+            return;
+        }
+
+        isUploading = true;
+        next.status = 'uploading';
+        
+        const fileItemEl = document.getElementById(next.id);
+        const statusEl = fileItemEl.querySelector(".file-status");
+        const progressContainer = document.getElementById(`progress-container-${next.id}`);
+        const progressBar = document.getElementById(`progress-bar-${next.id}`);
+        
+        statusEl.className = "file-status status-uploading";
+        statusEl.innerText = "上传中";
+        progressContainer.style.display = "block";
+
+        // Perform Upload using XHR for progress tracking
+        const formData = new FormData();
+        formData.append("file", next.file);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", `/api/collect/${boxCode}/upload`, true);
+
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                next.progress = percent;
+                progressBar.style.width = percent + "%";
+            }
+        };
+
+        xhr.onload = () => {
+            isUploading = false;
+            try {
+                const res = JSON.parse(xhr.responseText);
+                if (xhr.status === 200 && res.code === 200) {
+                    next.status = 'success';
+                    statusEl.className = "file-status status-success";
+                    statusEl.innerText = "成功";
+                    progressBar.style.background = "var(--success)";
+                } else {
+                    next.status = 'error';
+                    statusEl.className = "file-status status-error";
+                    statusEl.innerText = res.detail || "失败";
+                    progressBar.style.background = "var(--error)";
+                }
+            } catch (e) {
+                next.status = 'error';
+                statusEl.className = "file-status status-error";
+                statusEl.innerText = "上传错误";
+                progressBar.style.background = "var(--error)";
+            }
+            processQueue();
+        };
+
+        xhr.onerror = () => {
+            isUploading = false;
+            next.status = 'error';
+            statusEl.className = "file-status status-error";
+            statusEl.innerText = "连接断开";
+            progressBar.style.background = "var(--error)";
+            processQueue();
+        };
+
+        xhr.send(formData);
+    }
+
+    function resetPage() {
+        uploadQueue = [];
+        fileList.innerHTML = "";
+        completeSection.style.display = "none";
+        uploadSection.style.display = "block";
+        loadBoxInfo();
+    }
+
+    function formatBytes(bytes, decimals = 2) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const dm = decimals < 0 ? 0 : decimals;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+    }
+
+    // Init
+    loadBoxInfo();
+</script>
+</body>
+</html>

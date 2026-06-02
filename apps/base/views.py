@@ -20,9 +20,9 @@ async def validate_file_size(file: UploadFile, max_size: int) -> int:
     size = file.size
     if size is None:
         # 读取流计算大小，保持指针复位
-        await file.seek(0, 2)
+        file.file.seek(0, 2)
         size = file.file.tell()
-        await file.seek(0)
+        file.file.seek(0)
     if size > max_size:
         max_size_mb = max_size / (1024 * 1024)
         raise HTTPException(
@@ -95,6 +95,8 @@ async def share_file(
 async def get_code_file_by_code(code, check=True):
     file_code = await FileCodes.filter(code=code).first()
     if not file_code:
+        return False, "文件不存在"
+    if getattr(file_code, "collection_box_id", None) is not None:
         return False, "文件不存在"
     if await file_code.is_expired() and check:
         return False, "文件已过期"

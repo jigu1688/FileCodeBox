@@ -26,7 +26,7 @@ def create_token(data: dict, expires_in: int = 3600 * 24 * 30) -> str:
     ).decode()
 
     signature = hmac.new(
-        settings.admin_token.encode(), f"{header}.{payload}".encode(), "sha256"
+        settings.jwt_secret.encode(), f"{header}.{payload}".encode(), "sha256"
     ).digest()
     signature = base64.b64encode(signature).decode()
 
@@ -44,7 +44,7 @@ def verify_token(token: str) -> dict:
 
         # 验证签名
         expected_signature = hmac.new(
-            settings.admin_token.encode(),
+            settings.jwt_secret.encode(),
             f"{header_b64}.{payload_b64}".encode(),
             "sha256",
         ).digest()
@@ -66,23 +66,42 @@ def verify_token(token: str) -> dict:
 
 
 async def admin_required(
-    authorization: str = Header(default=None), request: Request = None
+    authorization: str = Header(default=None),
+    token: str = None,
+    request: Request = None,
 ):
     """
     验证管理员权限
     """
     try:
-        if not authorization or not authorization.startswith("Bearer "):
-            is_admin = False
-        else:
+        is_admin = False
+        
+        # 1. 尝试从 Header 获取 token
+        if authorization and authorization.startswith("Bearer "):
             try:
-                token = authorization.split(" ")[1]
+                jwt_token = authorization.split(" ")[1]
+                payload = verify_token(jwt_token)
+                is_admin = payload.get("is_admin", False)
+            except ValueError:
+                pass
+
+        # 2. 如果 Header 无效或不存在，尝试从 query parameter 获取 token
+        if not is_admin and token:
+            try:
                 payload = verify_token(token)
                 is_admin = payload.get("is_admin", False)
-            except ValueError as e:
-                is_admin = False
+            except ValueError:
+                pass
 
-        if request.url.path.startswith("/share/"):
+        # 3. 兜底尝试直接从 request 的 query params 获取 token
+        if not is_admin and request and "token" in request.query_params:
+            try:
+                payload = verify_token(request.query_params["token"])
+                is_admin = payload.get("is_admin", False)
+            except ValueError:
+                pass
+
+        if request and request.url.path.startswith("/share/"):
             if not settings.openUpload and not is_admin:
                 raise HTTPException(
                     status_code=403, detail="本站未开启游客上传，如需上传请先登录后台"
@@ -93,6 +112,7 @@ async def admin_required(
         return is_admin
     except ValueError as e:
         raise HTTPException(status_code=401, detail=str(e))
+
 
 
 async def share_required_login(

@@ -16,15 +16,23 @@ from core.storage import FileStorageInterface, storages
 from core.utils import get_now
 
 
+def cleanup_empty_dirs():
+    path = f"{data_root}/share/data"
+    if os.path.exists(path):
+        for root, dirs, files in os.walk(path, topdown=False):
+            if not dirs and not files:
+                try:
+                    os.rmdir(root)
+                except Exception:
+                    pass
+
 async def delete_expire_files():
-    file_storage: FileStorageInterface = storages[settings.file_storage]()
     while True:
         try:
+            file_storage: FileStorageInterface = storages[settings.file_storage]()
             # 遍历 share目录下的所有文件夹，删除空的文件夹，并判断父目录是否为空，如果为空也删除
             if settings.file_storage == "local":
-                for root, dirs, files in os.walk(f"{data_root}/share/data"):
-                    if not dirs and not files:
-                        os.rmdir(root)
+                await asyncio.to_thread(cleanup_empty_dirs)
             await ip_limit["error"].remove_expired_ip()
             await ip_limit["upload"].remove_expired_ip()
             expire_data = await FileCodes.filter(
@@ -47,11 +55,11 @@ async def delete_expire_files():
 
 async def clean_incomplete_uploads():
     """清理超时未完成的分片上传"""
-    file_storage: FileStorageInterface = storages[settings.file_storage]()
     # 默认 24 小时未完成的上传视为过期
     expire_hours = getattr(settings, 'chunk_expire_hours', 24)
     while True:
         try:
+            file_storage: FileStorageInterface = storages[settings.file_storage]()
             expire_time = datetime.datetime.now() - datetime.timedelta(hours=expire_hours)
             # 查找所有过期的上传会话（chunk_index=-1 的记录）
             expired_sessions = await UploadChunk.filter(

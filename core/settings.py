@@ -2,6 +2,7 @@
 # @Author  : Lan
 # @File    : settings.py
 # @Software: PyCharm
+import os
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -11,6 +12,7 @@ if not data_root.exists():
     data_root.mkdir(parents=True, exist_ok=True)
 
 DEFAULT_CONFIG = {
+    "database_url": os.getenv("DATABASE_URL", ""),
     "file_storage": "local",
     "storage_path": "",
     "name": "文件快递柜 - FileCodeBox",
@@ -62,6 +64,12 @@ DEFAULT_CONFIG = {
             "author": "Lan",
             "version": "1.0",
         },
+        {
+            "name": "2026",
+            "key": "themes/2026",
+            "author": "Antigravity",
+            "version": "1.0",
+        },
     ],
     "themesSelect": "themes/2024",
     "errorMinute": 1,
@@ -71,6 +79,8 @@ DEFAULT_CONFIG = {
     "serverPort": 12345,
     "showAdminAddr": 0,
     "robotsText": "User-agent: *\nDisallow: /",
+    "trust_proxies": 0,
+    "jwt_secret": "",
 }
 
 
