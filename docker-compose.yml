@@ -1,12 +1,23 @@
-version: "3"
+version: "3.8"
+
 services:
   file-code-box:
-    image: lanol/filecodebox:latest
+    container_name: file-code-box
+    # 支持本地快速构建，能够一键打包包含您最新修改代码的专属镜像
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+    image: jigu1688/filecodebox:latest
     volumes:
-      - fcb-data:/app/data:rw
+      # 【本地目录持久化】：将容器内的数据目录持久化挂载到当前工作区下的 ./data 中，方便随时直接备份、迁移和管理
+      - ./data:/app/data:rw
+    environment:
+      - TZ=Asia/Shanghai
+      # 您可以在这里添加其他环境变量，例如：
+      # - PORT=12345
+      # - DATABASE_URL=sqlite:///app/data/filecodebox.db
     restart: unless-stopped
     ports:
       - "12345:12345"
-volumes:
-  fcb-data:
-    external: false

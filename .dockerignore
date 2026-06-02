@@ -1,3 +1,41 @@
-*.md
-.idea
+# Git
 .git
+.gitignore
+.github
+
+# Editor & IDEs
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.gemini/
+antigravity-ide/
+scratch/
+
+# Python caching & Virtual Environments
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.toast
+.pytest_cache/
+.mypy_cache/
+
+# Local databases & logs & runtime state
+data/
+error_traceback.log
+*.db
+*.log
+
+# Unused frontend source & documentation
+docs/
+fcb-fronted/
+*.md
