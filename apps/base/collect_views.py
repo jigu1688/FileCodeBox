@@ -259,7 +259,8 @@ async def upload_to_box(
         file_path=path,
         size=file_size,
         collection_box_id=box.id,
-        expired_at=box.expired_at
+        expired_at=box.expired_at,
+        expired_count=-1
     )
     
     ip_limit["upload"].add_ip(ip)
