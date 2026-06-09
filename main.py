@@ -322,7 +322,7 @@ async def sys_admin():
     return HTMLResponse(
         content=html_content,
         media_type="text/html",
-        headers={"Cache-Control": "no-cache"}
+        headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"}
     )
 
 
