@@ -8,15 +8,17 @@ from datetime import datetime
 from typing import Optional
 from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
+from fastapi.responses import StreamingResponse, FileResponse
 from pydantic import BaseModel, Field
+from pathlib import Path
+import uuid
 
 from apps.base.models import CollectionBox, FileCodes
 from apps.base.utils import ip_limit, get_file_path_name, get_random_code
 from apps.admin.dependencies import admin_required
 from core.response import APIResponse
-from core.settings import settings
+from core.settings import settings, data_root
 from core.storage import storages, FileStorageInterface
 
 collect_api = APIRouter(prefix="", tags=["文件收集柜"])
@@ -134,8 +136,17 @@ async def delete_box(box_id: int, admin: bool = Depends(admin_required)):
     return APIResponse(detail="删除成功")
 
 
+def cleanup_temp_file(file_path: str):
+    try:
+        path = Path(file_path)
+        if path.exists():
+            path.unlink()
+    except Exception:
+        pass
+
+
 @collect_api.get("/api/admin/collect/{box_id}/zip")
-async def download_box_zip(box_id: int, admin: bool = Depends(admin_required)):
+async def download_box_zip(box_id: int, background_tasks: BackgroundTasks, admin: bool = Depends(admin_required)):
     box = await CollectionBox.filter(id=box_id).first()
     if not box:
         raise HTTPException(status_code=404, detail="收集箱不存在")
@@ -146,8 +157,14 @@ async def download_box_zip(box_id: int, admin: bool = Depends(admin_required)):
         
     file_storage: FileStorageInterface = storages[settings.file_storage]()
     
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+    # 确保 data/temp_zips 目录存在
+    temp_dir = Path(data_root) / "temp_zips"
+    if not temp_dir.exists():
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        
+    temp_file_path = temp_dir / f"collect_{box_id}_{uuid.uuid4().hex}.zip"
+    
+    with zipfile.ZipFile(temp_file_path, "w", zipfile.ZIP_DEFLATED) as zip_file:
         for f in files:
             filename = f"{f.prefix}{f.suffix}"
             try:
@@ -162,14 +179,15 @@ async def download_box_zip(box_id: int, admin: bool = Depends(admin_required)):
             except Exception:
                 pass
                 
-    zip_buffer.seek(0)
+    background_tasks.add_task(cleanup_temp_file, str(temp_file_path))
     
     encoded_filename = quote(f"{box.name}_收集文件.zip", safe='')
     headers = {
-        "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+        "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
+        "Accept-Ranges": "bytes"
     }
-    return StreamingResponse(
-        zip_buffer,
+    return FileResponse(
+        path=temp_file_path,
         media_type="application/zip",
         headers=headers
     )

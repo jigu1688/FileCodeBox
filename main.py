@@ -59,6 +59,16 @@ async def lifespan(app: FastAPI):
 
     # 加载配置
     await load_config()
+
+    # 清理遗留的临时压缩包
+    temp_zip_dir = data_root / "temp_zips"
+    if temp_zip_dir.exists():
+        import shutil
+        try:
+            shutil.rmtree(temp_zip_dir)
+            logger.info("已清理遗留的临时压缩文件目录")
+        except Exception as e:
+            logger.warning(f"清理遗留临时压缩文件目录失败: {e}")
     app.mount(
         "/assets",
         FallbackStaticFiles(directory=f"./{settings.themesSelect}/assets", fallback_directory="./themes/2024/assets"),
