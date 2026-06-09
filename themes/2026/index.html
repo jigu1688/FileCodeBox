@@ -1516,16 +1516,16 @@
         async function handleRetrieve(e) {
             e.preventDefault();
             const input = document.getElementById('code-input');
-            const code = input.value.trim().toUpperCase();
+            const code = input.value.trim();
 
-            if (code.length !== 5) {
-                showToast("取件码必须为 5 位数字或字母！", "error");
+            if (code.length < 3 || code.length > 20) {
+                showToast("取件码长度必须在 3 到 20 位之间！", "error");
                 return;
             }
 
             const submitBtn = document.getElementById('retrieve-submit-btn');
             submitBtn.disabled = true;
-            showToast("正在提取文件详情...", "info");
+            showToast("正在提取件详情...", "info");
 
             try {
                 const response = await fetch('/share/select/', {
@@ -1537,6 +1537,13 @@
                 
                 if (res.code === 200 && res.detail) {
                     const detail = res.detail;
+                    if (detail.text && detail.text.startsWith('/collect/')) {
+                        showToast("已匹配收集柜，正在前往...", "success");
+                        setTimeout(() => {
+                            window.location.href = detail.text;
+                        }, 1000);
+                        return;
+                    }
                     const isDownloadable = detail.text.startsWith('/share/download') || detail.name !== 'Text';
                     const downloadUrl = isDownloadable ? (detail.text.startsWith('http') ? detail.text : `${window.location.origin}${detail.text}`) : null;
                     const fileTextContent = isDownloadable ? null : detail.text;

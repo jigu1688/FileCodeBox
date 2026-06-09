@@ -115,6 +115,15 @@ async def get_code_file(code: str, ip: str = Depends(ip_limit["error"])):
     file_storage: FileStorageInterface = storages[settings.file_storage]()
     has, file_code = await get_code_file_by_code(code)
     if not has:
+        from apps.base.models import CollectionBox
+        box = await CollectionBox.filter(code=code.lower()).first()
+        if box:
+            if await box.is_expired():
+                ip_limit["error"].add_ip(ip)
+                return APIResponse(code=400, detail="该收集柜已过期")
+            from fastapi.responses import RedirectResponse
+            return RedirectResponse(url=f"/collect/{box.code}")
+            
         ip_limit["error"].add_ip(ip)
         return APIResponse(code=404, detail=file_code)
 
@@ -127,6 +136,21 @@ async def select_file(data: SelectFileModel, ip: str = Depends(ip_limit["error"]
     file_storage: FileStorageInterface = storages[settings.file_storage]()
     has, file_code = await get_code_file_by_code(data.code)
     if not has:
+        from apps.base.models import CollectionBox
+        box = await CollectionBox.filter(code=data.code.lower()).first()
+        if box:
+            if await box.is_expired():
+                ip_limit["error"].add_ip(ip)
+                return APIResponse(code=400, detail="该收集柜已过期")
+            return APIResponse(
+                detail={
+                    "code": box.code,
+                    "name": f"【收集柜】{box.name}",
+                    "size": 0,
+                    "text": f"/collect/{box.code}",
+                }
+            )
+            
         ip_limit["error"].add_ip(ip)
         return APIResponse(code=404, detail=file_code)
 

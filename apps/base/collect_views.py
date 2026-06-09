@@ -32,6 +32,7 @@ class CollectionBoxCreate(BaseModel):
     allowed_extensions: Optional[str] = None  # 逗号分隔的扩展名，例如 "jpg,png"
     expired_at: Optional[datetime] = None
     max_files: Optional[int] = 0  # 0表示不限制
+    code: Optional[str] = Field(None, max_length=20)  # 自定义提取码，最长 20 位
 
 
 # ==========================================
@@ -40,11 +41,22 @@ class CollectionBoxCreate(BaseModel):
 
 @collect_api.post("/api/admin/collect/create")
 async def create_box(data: CollectionBoxCreate, admin: bool = Depends(admin_required)):
-    chars = string.ascii_lowercase + string.digits
-    while True:
-        code = "".join(random.choice(chars) for _ in range(5))
-        if not await CollectionBox.filter(code=code).exists():
-            break
+    if data.code:
+        # 验证自定义提取码格式
+        custom_code = data.code.lower().strip()
+        if not custom_code.isalnum() or len(custom_code) < 3 or len(custom_code) > 20:
+            raise HTTPException(status_code=400, detail="自定义提取码必须为 3-20 位英文或数字")
+            
+        # 校验唯一性
+        if await CollectionBox.filter(code=custom_code).exists() or await FileCodes.filter(code=custom_code).exists():
+            raise HTTPException(status_code=400, detail="该提取码已被占用，请使用其他提取码")
+        code = custom_code
+    else:
+        chars = string.ascii_lowercase + string.digits
+        while True:
+            code = "".join(random.choice(chars) for _ in range(5))
+            if not await CollectionBox.filter(code=code).exists() and not await FileCodes.filter(code=code).exists():
+                break
     
     box = await CollectionBox.create(
         code=code,
