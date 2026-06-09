@@ -1460,10 +1460,37 @@
             return str ? str.length : 0;
         }
 
+        function copyToClipboard(text) {
+            return new Promise((resolve, reject) => {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(text).then(resolve).catch(reject);
+                } else {
+                    const textarea = document.createElement("textarea");
+                    textarea.value = text;
+                    textarea.style.position = "fixed";
+                    textarea.style.opacity = "0";
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        const successful = document.execCommand("copy");
+                        document.body.removeChild(textarea);
+                        if (successful) {
+                            resolve();
+                        } else {
+                            reject(new Error("execCommand copy failed"));
+                        }
+                    } catch (err) {
+                        document.body.removeChild(textarea);
+                        reject(err);
+                    }
+                }
+            });
+        }
+
         function copySuccessCode() {
             const code = document.getElementById('success-code-val').innerText;
             const shareUrl = `${window.location.origin}?code=${code}`;
-            navigator.clipboard.writeText(shareUrl).then(() => {
+            copyToClipboard(shareUrl).then(() => {
                 showToast("分享口令链接复制成功！", "success");
             }).catch(() => {
                 showToast("复制失败，请手动选择复制！", "error");
@@ -1536,8 +1563,10 @@
                         downloadBtn.innerText = '一键复制文本';
                         downloadBtn.href = 'javascript:void(0)';
                         downloadBtn.onclick = () => {
-                            navigator.clipboard.writeText(fileTextContent).then(() => {
+                            copyToClipboard(fileTextContent).then(() => {
                                 showToast("文本内容复制成功！", "success");
+                            }).catch(() => {
+                                showToast("复制失败，请手动选择复制！", "error");
                             });
                         };
                     }

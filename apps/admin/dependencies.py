@@ -40,6 +40,8 @@ def verify_token(token: str) -> dict:
     :return: 解码后的数据
     """
     try:
+        if token:
+            token = token.replace(" ", "+")
         header_b64, payload_b64, signature_b64 = token.split(".")
 
         # 验证签名
