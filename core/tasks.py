@@ -6,6 +6,7 @@ import asyncio
 import datetime
 import logging
 import os
+import time
 
 from tortoise.expressions import Q
 
@@ -89,3 +90,28 @@ async def clean_incomplete_uploads():
             logging.error(f"清理未完成上传任务异常: {e}")
         finally:
             await asyncio.sleep(3600)  # 每小时执行一次
+
+
+async def clean_temp_zips():
+    """定期清理临时打包的压缩包（保留最近 1 小时内生成的）"""
+    while True:
+        try:
+            temp_zip_dir = data_root / "temp_zips"
+            if temp_zip_dir.exists():
+                now = time.time()
+                # 使用 to_thread 避免在事件循环中执行磁盘 I/O 阻塞
+                def _scan_and_clean():
+                    for item in temp_zip_dir.iterdir():
+                        if item.is_file() and item.suffix == ".zip":
+                            # 判断文件修改时间是否超过 1 小时 (3600 秒)
+                            if now - item.stat().st_mtime > 3600:
+                                try:
+                                    item.unlink()
+                                    logging.info(f"已清理过期的临时压缩包: {item.name}")
+                                except Exception:
+                                    pass
+                await asyncio.to_thread(_scan_and_clean)
+        except Exception as e:
+            logging.error(f"清理临时压缩包异常: {e}")
+        finally:
+            await asyncio.sleep(600)  # 每 10 分钟运行一次

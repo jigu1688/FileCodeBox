@@ -22,7 +22,7 @@ from core.database import init_db
 from core.logger import logger
 from core.response import APIResponse
 from core.settings import data_root, settings, BASE_DIR, DEFAULT_CONFIG
-from core.tasks import delete_expire_files, clean_incomplete_uploads
+from core.tasks import delete_expire_files, clean_incomplete_uploads, clean_temp_zips
 
 from fastapi import HTTPException
 
@@ -83,6 +83,7 @@ async def lifespan(app: FastAPI):
     # 启动后台任务
     task = asyncio.create_task(delete_expire_files())
     chunk_cleanup_task = asyncio.create_task(clean_incomplete_uploads())
+    zip_cleanup_task = asyncio.create_task(clean_temp_zips())
     logger.info("应用初始化完成")
 
     try:
@@ -92,7 +93,8 @@ async def lifespan(app: FastAPI):
         logger.info("正在关闭应用...")
         task.cancel()
         chunk_cleanup_task.cancel()
-        await asyncio.gather(task, chunk_cleanup_task, return_exceptions=True)
+        zip_cleanup_task.cancel()
+        await asyncio.gather(task, chunk_cleanup_task, zip_cleanup_task, return_exceptions=True)
         await Tortoise.close_connections()
         logger.info("应用已关闭")
 

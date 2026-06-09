@@ -7,6 +7,7 @@ import mimetypes
 from datetime import datetime
 from typing import Optional
 from urllib.parse import quote
+import asyncio
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, BackgroundTasks
 from fastapi.responses import StreamingResponse, FileResponse
@@ -171,17 +172,91 @@ async def download_box_zip(box_id: int, background_tasks: BackgroundTasks, admin
                 if settings.file_storage == "local":
                     local_path = file_storage.root_path / await f.get_file_path()
                     if local_path.exists():
-                        zip_file.write(local_path, arcname=filename)
+                        await asyncio.to_thread(zip_file.write, local_path, filename)
                 else:
                     resp = await file_storage.get_file_response(f)
                     content = getattr(resp, "body", b"")
-                    zip_file.writestr(filename, content)
+                    await asyncio.to_thread(zip_file.writestr, filename, content)
             except Exception:
                 pass
                 
     background_tasks.add_task(cleanup_temp_file, str(temp_file_path))
     
     encoded_filename = quote(f"{box.name}_收集文件.zip", safe='')
+    headers = {
+        "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
+        "Accept-Ranges": "bytes"
+    }
+    return FileResponse(
+        path=temp_file_path,
+        media_type="application/zip",
+        headers=headers
+    )
+
+
+@collect_api.get("/api/admin/collect/{box_id}/zip/prepare")
+async def prepare_box_zip(box_id: int, admin: bool = Depends(admin_required)):
+    box = await CollectionBox.filter(id=box_id).first()
+    if not box:
+        raise HTTPException(status_code=404, detail="收集箱不存在")
+        
+    files = await FileCodes.filter(collection_box_id=box_id).all()
+    if not files:
+        raise HTTPException(status_code=400, detail="该收集箱暂无文件")
+        
+    file_storage: FileStorageInterface = storages[settings.file_storage]()
+    
+    # 确保 data/temp_zips 目录存在
+    temp_dir = Path(data_root) / "temp_zips"
+    if not temp_dir.exists():
+        temp_dir.mkdir(parents=True, exist_ok=True)
+        
+    zip_name = f"collect_{box_id}_{uuid.uuid4().hex}.zip"
+    temp_file_path = temp_dir / zip_name
+    
+    with zipfile.ZipFile(temp_file_path, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        for f in files:
+            filename = f"{f.prefix}{f.suffix}"
+            try:
+                if settings.file_storage == "local":
+                    local_path = file_storage.root_path / await f.get_file_path()
+                    if local_path.exists():
+                        await asyncio.to_thread(zip_file.write, local_path, filename)
+                else:
+                    resp = await file_storage.get_file_response(f)
+                    content = getattr(resp, "body", b"")
+                    await asyncio.to_thread(zip_file.writestr, filename, content)
+            except Exception:
+                pass
+                
+    return APIResponse(detail={"zip_name": zip_name})
+
+
+@collect_api.get("/api/admin/collect/zip/download/{zip_name}")
+async def download_box_zip_file(zip_name: str, admin: bool = Depends(admin_required)):
+    # 路径安全检查，防止目录穿越
+    if ".." in zip_name or "/" in zip_name or "\\" in zip_name:
+        raise HTTPException(status_code=400, detail="非法的文件名称")
+        
+    temp_dir = Path(data_root) / "temp_zips"
+    temp_file_path = temp_dir / zip_name
+    
+    if not temp_file_path.exists():
+        raise HTTPException(status_code=404, detail="打包文件已过期或不存在，请重新打包下载")
+        
+    # 根据文件名中的 box_id 获取收集箱名称以构建友好的文件名
+    box_name = "收集文件"
+    try:
+        parts = zip_name.split("_")
+        if len(parts) >= 2 and parts[0] == "collect":
+            box_id = int(parts[1])
+            box = await CollectionBox.filter(id=box_id).first()
+            if box:
+                box_name = box.name
+    except Exception:
+        pass
+        
+    encoded_filename = quote(f"{box_name}_收集文件.zip", safe='')
     headers = {
         "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}",
         "Accept-Ranges": "bytes"
